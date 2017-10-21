@@ -11,8 +11,9 @@ BitBar needs to be installed. Download [here](https://github.com/matryer/bitbar/
 Then you can either:
 
 * _Option 1_: Drop the `swift-trending.15m.swift` file in your BitBar plugin directly.
-* _Option 2_: Click this link -> [Install Swift Trending](bitbar://openPlugin?title=Swift%20Trending&src=https://raw.githubusercontent.com/kaishin/bitbar-plugins/master/Dev/GitHub/swift-trending.15m.swift).
+* _Option 2_: Click the link below:
 
+<a href="bitbar://openPlugin?title=Swift%20Trending&src=https://raw.githubusercontent.com/kaishin/bitbar-plugins/master/Dev/GitHub/swift-trending.15m.swift">Install Plugin</a>
 
 ## Settings
 
