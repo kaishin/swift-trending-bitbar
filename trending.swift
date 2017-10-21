@@ -11,10 +11,10 @@
 
 import Foundation
 
-// PREFERENCES (Feel free to edit these to your liking)
+// PREFERENCES (Feel free to change these to your liking)
 
-var displayCount = 15
-var subtitleLineLength = 70
+var displayCount = 15 // Min: 10, Max: 25
+var maxSubtitleLineLength = 70
 var trendingPeriod = "daily" // Possible values: "daily", "weekly", "monthly"
 
 // Try not to edit the code below.
@@ -134,7 +134,7 @@ struct Repository {
   }
 
   var secondLine: String {
-    return "★\(starCount) (+\(newStarCount)) — \(description)" + "| size=12 length=\(subtitleLineLength)"
+    return "★\(starCount) (+\(newStarCount)) — \(description)" + "| size=12 length=\(maxSubtitleLineLength)"
   }
 
   func multiLineDescription(wordCount count: Int) -> String {
@@ -188,7 +188,7 @@ func printOutput(responseHTML html: String) {
   print("Trending Swift \(period.title.capitalized)")
   print("---")
 
-  let count = max(displayCount, 10)
+  let count = max(min(displayCount, 25), 10)
 
   for repo in trendingRepositories(html: html)[0..<count] {
     print(repo.firstLine)
