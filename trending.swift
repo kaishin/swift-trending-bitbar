@@ -5,7 +5,7 @@
 // # <bitbar.author>Reda Lemeden</bitbar.author>
 // # <bitbar.author.github>kaishin</bitbar.author.github>
 // # <bitbar.desc>List Swift repositories tending on GitHub in a given period.</bitbar.desc>
-// # <bitbar.image>http://www.hosted-somewhere/pluginimage</bitbar.image>
+// # <bitbar.image>https://github.com/kaishin/swift-trending-bitbar/raw/master/screenshot.png</bitbar.image>
 // # <bitbar.dependencies>swift</bitbar.dependencies>
 // # <bitbar.abouturl>https://github.com/kaishin/swift-trending-bitbar</bitbar.abouturl>
 
