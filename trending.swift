@@ -11,6 +11,19 @@
 
 import Foundation
 
+// PREFERENCES (Feel free to edit these to your liking)
+
+var displayCount = 15
+var subtitleLineLength = 70
+var trendingPeriod = "daily" // Possible values: "daily", "weekly", "monthly"
+
+// Try not to edit the code below.
+
+let icon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAuBJREFUWAm1l1uITlEUx8c9GmmIKR4UXsjtgZGaeHBLlEYpD0p5EZLMA0nJg0TzRKI8KJ6IlHiYKKE0D5PEvEgyLil3ocn98vvrW1/Lts85+3zzWfWbvfbaa62zzv725UxDQ32liXRLy6QcWMY5wfcdPvNhZ4Lvf3MZSeZX0JHyhEEFTpMY11uVka84N8KuSnulTPCAwHka/ZWBLaU7HicV8gu2pQSYTyuKptDLbjpt3pCon8FPBfyA5IU5GOfj0AwmQ1C6YbUZEttV+KkA8RzGQZJMxasHpjjv2eh9sMbZitQRONjPoCLOFwX48S10XsAcZ9yD/h3WOluRegcHmwW1C4sC/PhFOh9hWcWon6cLVMT6iq2oOYeDL0A/ZbKMwfMpfAN74ET0t/ATNEtFchIHX4D0lqIgP76Ajt5YgftB23QFqADZ9kKeHGMwLOBoXkBsTL+9JbmAPgr2Odsp9KEQkyMYLdba19jC8yYWW7XpvugES3AffRZcdrYb6LFtdtb5WLza6VBKRuPdC5ZEW7IdHjub1ss88HKTjsX4dpN3StVn4qhd4ROF2+wL4z75m8DfYrU2ahLdC7YoLVmsPY3fXIiNyXYVapYNRGYl9vbPOX73an56JXBHTnJfRJb+rL8FKP5gP4rQ4q2KTrxapYPArLfMs9/yD9TlshlKHQ4uwQH0vIfFxk64+D/qJf52Q2s4kNgvuya2h3nHYngEqlbfcIshdUZ0S26ETxB725hNV30T/CUz6H0AC3iIrulVMToJvUygo2taC/EJWEyZ9jBx/8hyLLp+Y4m0r99DykEUiw9tmrHm8LP8AcYeaANNrRf1h4Eup3qI8r3MSqRjtBfCquvd78wqQPZGOAT6rK7Hg/UdoBnWhWX5MmcAn6q0oF0HCyrbXiPWb2990NgpqmKSZRGemjL/BnnF3MVX/xtkyToG+lL3uk+in2YJ6K0mg47y4aBVrfv/NuhrqQuKZOtv52B4+dBxxIcAAAAASUVORK5CYII="
+let templateImage = "|templateImage=\(icon)"
+
+// Mark: - Regex
+
 infix operator =~
 
 func =~ (value: String, pattern: String) -> RegexResult {
@@ -51,8 +64,10 @@ struct RegexResult {
   }
 }
 
+// Mark: - Foundation Extensions
+
 extension String {
-   func matches(pattern: String) -> [String] {
+  func matches(pattern: String) -> [String] {
     let regexResult = (self =~ pattern)
 
     if regexResult.isMatching {
@@ -66,6 +81,10 @@ extension String {
     let components = self.components(separatedBy: NSCharacterSet.whitespacesAndNewlines)
     return components.filter { !$0.isEmpty }.joined(separator: " ")
   }
+
+  func trunc(length: Int, trailing: String = "…") -> String {
+    return (self.count > length) ? self.prefix(length) + trailing : self
+  }
 }
 
 extension Array {
@@ -77,12 +96,14 @@ extension Array {
   }
 }
 
+// Mark: - Repository
+
 struct Repository {
   let authorName: String
   let projectName: String
   let description: String
   let starCount: Int
-  let starredInPeriod: String
+  let newStarCount: Int
 
   init?(string: String) {
     let properties = string.split(separator: "|")
@@ -90,49 +111,95 @@ struct Repository {
 
     self.authorName = String(describing: properties[0].split(separator: "/").first ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     self.projectName = String(describing: properties[0].split(separator: "/").last ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    self.description = String(describing: properties[1])
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .replacingOccurrences(of: "&amp;", with: "&")
 
-    let fullDescription = String(describing: properties[1]).trimmingCharacters(in: .whitespacesAndNewlines)
-    let fullDescriptionWords = fullDescription.split(separator: " ")
-    let chunkedDescription = fullDescriptionWords.chunk(8).map { chunk in
-      return chunk.joined(separator: " ")
-    }
-
-    self.description = chunkedDescription.joined(separator: "| size=12 \n")
-
-    let stars = String(describing: properties[2].split(separator: " ").first?.replacingOccurrences(of: ",", with: "") ?? "0")
+    let stars = String(describing: properties[2]
+      .split(separator: " ").first?.replacingOccurrences(of: ",", with: "") ?? "0")
     self.starCount = Int(stars) ?? 0
 
-    self.starredInPeriod = String(describing: properties[3]).trimmingCharacters(in: .whitespacesAndNewlines)
+    let newStarsString = String(describing: properties[3]
+      .split(separator: " ").first?.replacingOccurrences(of: ",", with: "") ?? "0")
+
+    self.newStarCount = Int(newStarsString) ?? 0
   }
 
   var gitHubURL: String {
     return "https://github.com/\(authorName)/\(projectName)/"
   }
+
+  var firstLine: String {
+    return "\(projectName) (by \(authorName))" + "| href=\(gitHubURL)"
+  }
+
+  var secondLine: String {
+    return "★\(starCount) (+\(newStarCount)) — \(description)" + "| size=12 length=\(subtitleLineLength)"
+  }
+
+  func multiLineDescription(wordCount count: Int) -> String {
+    let fullDescriptionWords = description.split(separator: " ")
+    let chunkedDescription = fullDescriptionWords.chunk(count).map { chunk in
+      return chunk.joined(separator: " ")
+    }
+
+    return  chunkedDescription.joined(separator: "| size=12 \n")
+  }
 }
 
+enum Period: String {
+  case daily, weekly, monthly
 
-// Remote
-let url = URL(string: "https://github.com/trending/swift")!
-let html = try? String(contentsOf: url)
+  var title: String {
+    switch self {
+    case .daily:
+      return "today"
+    case .weekly:
+      return "this week"
+    default:
+      return "this month"
+    }
+  }
+}
 
+// Mark: - Free Functions
 
-let repos = html?.matches(pattern: "<ol class=\"repo-list\">(.|\n)*?</ol>")[0]
-let repoList = repos?.matches(pattern: "<li class=(.|\n)*?</li>")
-var repositories = [Repository]()
+func trendingRepositories(html: String) -> [Repository] {
+  let repos = html.matches(pattern: "<ol class=\"repo-list\">(.|\n)*?</ol>")[0]
+  let repoList = repos.matches(pattern: "<li class=(.|\n)*?</li>")
 
-repositories = (repoList ?? []).flatMap { repo in
-  let sanitizedString = repo.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-    .replacingOccurrences(of: "\n    Star|Built by\n|\n          Swift", with: "|", options: .regularExpression)
-    .condenseWhitespace()
+  return repoList.flatMap { repo in
+    let sanitizedString = repo.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+      .replacingOccurrences(of: "\n    Star|Built by\n|\n          Swift", with: "|", options: .regularExpression)
+      .condenseWhitespace()
 
     return Repository(string: sanitizedString)
   }
-
-print("| size=10 templateImage=iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATBJREFUeNqc0b1KQzEYxvFQq4i2kwiCDjo4dZIKQm+hm5tUUHDxBnQSF1cXh1IR3AqdBK+gLl5BURz82hy0Iq2lYkHqP/BGHsKxFgM/Tvvk5D3Jm7Rzro8OHtHABc7x6oYc/QSfqCH33wLBF8rIDiowj2Ws4wQvCYVuh92NH6NW7D4q8oaVpAVH2EMRk5KP4zChSG5QD/xtVDAr82voRcfJ/tXEd5SiIjpfDhMjmEETc0hbPoZVu85LXNlXCzafx5k1/GdMYAet6Gsl6Yk2tvbbLSziLjpO6MmG5L4vU7rIbysl/9vy8rFccVPyLR/uS1CXPuxGt5Ox/FTyqrMt6plDo/yCD8mLlm9K1kjZVnW07NmxGwhjyZ43ki34Att4QhcHuJYXHuT3tD2fJct8CzAAqHZ3QQFiFvsAAAAASUVORK5CYII=")
-print("---")
-for repo in repositories {
-
-  print("\(repo.authorName)/\(repo.projectName)", "| href=\(repo.gitHubURL)")
-  print(repo.description, "| size=12")
-  print("---")
 }
+
+func printOutput(responseHTML html: String) {
+  print(templateImage)
+  print("---")
+
+  guard let period = Period(rawValue: trendingPeriod) else {
+    fatalError("Frequency specified should be one of the following options: 'daily', 'weekly', 'monthly'.")
+  }
+
+  print("Trending Swift \(period.title.capitalized)")
+  print("---")
+
+  let count = max(displayCount, 10)
+
+  for repo in trendingRepositories(html: html)[0..<count] {
+    print(repo.firstLine)
+    print(repo.secondLine)
+  }
+}
+
+// Mark: - Output
+
+let url = URL(string: "https://github.com/trending/swift?since=\(trendingPeriod)")!
+let html = try? String(contentsOf: url)
+
+printOutput(responseHTML: html!)
+
