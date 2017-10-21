@@ -1,6 +1,6 @@
 # Swift Trending for BitBar
 
-List Swift repositories tending on GitHub in a given period.
+A plugin for [BitBar](https://getbitbar.com) (free) to list Swift repositories tending on GitHub in a given period.
 
 ![Screenshot](screenshot.png "Screenshot")
 
