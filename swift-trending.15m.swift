@@ -95,6 +95,10 @@ extension Array {
       return Array(self[startIndex..<startIndex.advanced(by: endIndex)])
     })
   }
+
+  subscript(safe index: Int) -> Element? {
+    return indices ~= index ? self[index] : nil
+  }
 }
 
 // Mark: - Repository
@@ -166,7 +170,8 @@ enum Period: String {
 // Mark: - Free Functions
 
 func trendingRepositories(html: String) -> [Repository] {
-  let repos = html.matches(pattern: "<ol class=\"repo-list\">(.|\n)*?</ol>")[0]
+  guard let repos = html.matches(pattern: "<ol class=\"repo-list\">(.|\n)*?</ol>")[safe: 0] else { return [] }
+
   let repoList = repos.matches(pattern: "<li class=(.|\n)*?</li>")
 
   return repoList.flatMap { repo in
@@ -200,9 +205,11 @@ func printOutput(responseHTML html: String) {
 // Mark: - Output
 
 let url = URL(string: "https://github.com/trending/swift?since=\(trendingPeriod)")!
-let html = try? String(contentsOf: url)
-
-printOutput(responseHTML: html!)
+if let html = try? String(contentsOf: url) {
+  printOutput(responseHTML: html)
+} else {
+  printOutput(responseHTML: "")
+}
 #else
 print("⚠️")
 print("---")
