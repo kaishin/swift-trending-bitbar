@@ -9,6 +9,7 @@
 // # <bitbar.dependencies>swift</bitbar.dependencies>
 // # <bitbar.abouturl>https://github.com/kaishin/swift-trending-bitbar</bitbar.abouturl>
 
+#if swift(>=4.0)
 import Foundation
 
 // PREFERENCES (Feel free to change these to your liking)
@@ -202,4 +203,8 @@ let url = URL(string: "https://github.com/trending/swift?since=\(trendingPeriod)
 let html = try? String(contentsOf: url)
 
 printOutput(responseHTML: html!)
-
+#else
+print("⚠️")
+print("---")
+print("Error: Swift 4 is required.")
+#endif
